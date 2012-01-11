@@ -1,0 +1,112 @@
+ShortAndSimple Rails Plugin
+=============================================================
+
+This is a simple drop-in plugin that allows you to generate 
+browser and email friendly URLs from long and ugly ones. 
+This plugin doesn't rely on or tries to replace any external service, 
+like http://tinyurl.com/.
+
+Example
+-------
+  
+  Turns:
+    "/sessions/new;token=74a89174426b40307102e165374ab8ab&uid=railsmonk"
+  Into:
+    "/u/f88f6068"
+
+Installation
+=============================================================
+
+Step-by-step guide.
+
+1. Create database table
+------------------------
+
+To create DB migration, run following command:
+
+    ./script/generate migration CreateShortUrls
+    
+And then put following code in it:
+
+    class CreateShortUrls < ActiveRecord::Migration
+      def self.up
+        create_table "short_urls" do |t|
+          t.column "short_url",    :string
+          t.column "long_url",     :string
+          t.column "created_at",   :datetime
+        end
+        add_index  :short_urls, :short_url
+      end
+
+      def self.down
+        drop_table "short_urls"
+      end
+    end
+
+2. Add route
+------------
+
+Open your config/routes.rb file, and declare a route for this plugin:
+    
+    map.short_and_simple
+
+somewhere at the beginning of routes declaration. For additional options,
+check API section of this file.
+
+3. Enable ShortAndSimple plugin in ApplicationController
+--------------------------------------------------------
+
+Include ShortAndSimple module in your ApplicationController:
+
+    class ApplicationController < ActionController::Base
+      include ShortAndSimple
+    end
+    
+API
+=============================================================
+
+Routes
+------
+
+  Method: map.short_and_simple(prefix="/u")
+  Doc: 
+    If you change prefix to for example "/short", 
+    generated URLs will be like "/short/f88f6068"
+
+View helpers
+------------
+
+  Method: shortify_path
+  Doc:
+    Generates relative path to short URL.
+  Usage:
+    <%= shortify_path "/dashboard/show/1" %>
+    # => "/u/f88f6068"
+
+  Method: shortify_url
+  Doc:
+    Generates absolute path to short URL.
+  Usage:
+    <%= shortify_url "/dashboard/show/1" %>
+    # => "http://www.example.com/u/f88f6068"
+
+ShortUrl model
+---------------
+
+  Method: ShortUrl.remember(long_url)
+  Doc:
+    Remembers long url, and returns key of the short one.
+  Usage:
+    ShortUrl.remember("/dashboard/show/1") # => "f88f6068"
+
+  Method: ShortUrl.retrieve(short_url)
+  Doc:
+    Returns long url by short_url key. 
+  Usage:
+    ShortUrl.retrieve("f88f6068") # => "/dashboard/show/1"
+
+
+
+=============================================================
+Copyright (c) 2007 Dmitry Sabanin <dmitry@sabanin.ru>.
+Released under the MIT license
